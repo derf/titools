@@ -7,7 +7,6 @@ binmode(STDOUT, ':utf8');
 my ($char, $char2);
 my $out;
 my $hex;
-my $context;
 my %all = (
 	0x01 => '►DMS',
 	0x02 => '►Dec',
