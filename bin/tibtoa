@@ -342,6 +342,7 @@ my $special = {
 };
 
 open(PRGM, '<', shift) or die;
+# Remove header added by tilp2
 seek(PRGM, 74, 0);
 while(read(PRGM, $char, 1)) {
 	$char = ord($char);
