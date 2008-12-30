@@ -3,12 +3,15 @@ use strict;
 use feature 'switch';
 use warnings;
 use utf8;
+use Getopt::Std;
+
 binmode(STDOUT, ':utf8');
 my ($char, $char2);
 my $out;
 my $cache;
 my $hex;
 my ($indent, $rindent);
+my %opts;
 my %all = (
 	0x01 => '►DMS',
 	0x02 => '►Dec',
@@ -606,6 +609,8 @@ my $special = {
 	},
 };
 
+getopts('i', \%opts);
+
 open(PRGM, '<', shift) or die;
 # Remove header added by tilp2
 seek(PRGM, 74, 0);
@@ -622,13 +627,15 @@ while(read(PRGM, $char, 1)) {
 		warn(sprintf('Unknown byte: %2x', $char));
 		$out = chr($char);
 	}
-	if ($out =~ /Then|While|Repeat|For/) {
-		$indent++;
-	} elsif ($out =~ /Else/) {
-		$rindent--;
-	} elsif ($out =~ /End/) {
-		$indent--;
-		$rindent--;
+	if ($opts{i}) {
+		if ($out =~ /Then|While|Repeat|For/) {
+			$indent++;
+		} elsif ($out =~ /Else/) {
+			$rindent--;
+		} elsif ($out =~ /End/) {
+			$indent--;
+			$rindent--;
+		}
 	}
 	$cache .= $out;
 	if ($out eq "\n") {
