@@ -635,7 +635,11 @@ while($offset <= $length) {
 		$char2 = ord(substr($program, $offset++, 1));
 		$out = $special->{$char}->{$char2};
 	} else {
-		warn(sprintf('Unknown byte 0x%02x', $char));
+		printf STDERR (
+			"Unknown byte 0x%02x at offset %d\n",
+			$char,
+			$offset - 1,
+		);
 		$out = chr($char);
 	}
 	if ($opts{i}) {
