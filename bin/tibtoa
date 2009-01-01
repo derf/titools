@@ -8,6 +8,8 @@ use utf8;
 use Getopt::Std;
 
 binmode(STDOUT, ':utf8');
+my $header = 74;
+my $footer = 2;
 my ($char, $char2);
 my $out;
 my $cache;
@@ -618,12 +620,12 @@ getopts('i', \%opts);
 open(PRGM, '<', shift) or die;
 binmode(PRGM);
 # Remove header added by tilp2
-seek(PRGM, 74, 0);
+seek(PRGM, $header, 0);
 $program = <PRGM>;
 close(PRGM);
 
 # The last two bytes don't contain program code
-substr($program, -2, 2, '');
+substr($program, -$footer, $footer, '');
 $length = length($program);
 $offset = 0;
 
