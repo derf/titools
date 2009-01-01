@@ -761,7 +761,7 @@ if ($header{type} eq 'program') {
 			$cache = '';
 		}
 	}
-	print $cache;
+	print "$cache\n";
 } elsif ($header{type} eq 'matrix' or $header{type} eq 'list') {
 	my ($step, $exp, $digit);
 	my $i = 0;
