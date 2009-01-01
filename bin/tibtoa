@@ -629,7 +629,7 @@ substr($program, -$footer, $footer, '');
 $length = length($program);
 $offset = 0;
 
-while($offset <= $length) {
+while($offset < $length) {
 	$char = ord(substr($program, $offset++, 1));
 	if (exists($all{$char})) {
 		$out = $all{$char};
