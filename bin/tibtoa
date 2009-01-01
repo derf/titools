@@ -644,6 +644,22 @@ sub header_name($) {
 	return($name);
 }
 
+sub header_size($) {
+	my $header = shift;
+	my $size;
+	$size->{full} = ord(substr($header, 70, 1)) + 255 * ord(substr($header, 71, 1));
+	given(header_type($header)) {
+		when('matrix') {
+			$size->{rows} = ord(substr($header, 72, 1));
+			$size->{cols} = ord(substr($header, 73, 1));
+		}
+		when('program') {
+			$size->{source} = ord(substr($header, 72, 1)) + 255 * ord(substr($header, 73, 1));
+		}
+	}
+	return($size);
+}
+
 sub header_compat($) {
 	return(substr(shift, 2, 4));
 }
@@ -666,11 +682,16 @@ $length = length($program);
 $offset = 0;
 
 # Parse the header
-print_header('Compatibility:', header_compat($header));
-print_header('Extracted at :', header_datestr($header));
-print_header('Type         :', header_type($header));
-print_header('Name         :', header_name($header));
-
+if ($opts{h}) {
+	print_header('Compatibility:', header_compat($header));
+	print_header('Extracted at :', header_datestr($header));
+	print_header('Type         :', header_type($header));
+	print_header('Name         :', header_name($header));
+	print_header('Length w/o header:', header_size($header)->{full});
+	if (header_type($header) eq 'matrix') {
+		print_header('Matrix dimensions:', join('x', @{header_size($header)}{'rows','cols'}));
+	}
+}
 
 
 # And now, the actual file content
