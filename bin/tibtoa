@@ -5,6 +5,7 @@ use strict;
 use feature 'switch';
 use warnings;
 use utf8;
+use 5.010;
 use Getopt::Std;
 
 binmode(STDOUT, ':utf8');
@@ -616,7 +617,42 @@ my $special = {
 };
 local $/;
 
-getopts('i', \%opts);
+sub print_header {
+	my $text = join(' ', @_);
+	print "// $text\n";
+}
+
+sub header_type($) {
+	my $header = shift;
+	given (ord(substr($header, 0x3b, 1))) {
+		when(0x02) { return('matrix') }
+		when(0x05) { return('program') }
+		default { return(sprintf('0x%02x', $_)) }
+	}
+}
+
+sub header_name($) {
+	my $header = shift;
+	my $name;
+	given (header_type($header)) {
+		when('matrix') { $name = substr($header, 61, 1) }
+		when('program') {
+			$name = substr($header, 60, 10);
+			$name =~ s/\x00/ /g;
+		}
+	}
+	return($name);
+}
+
+sub header_compat($) {
+	return(substr(shift, 2, 4));
+}
+
+sub header_datestr($) {
+	return(substr(shift, 29, 19));
+}
+
+getopts('ih', \%opts);
 
 open(PRGM, '<', shift) or die;
 binmode(PRGM);
@@ -629,6 +665,15 @@ $footer = substr($program, -$footerlength, $footerlength, '');
 $length = length($program);
 $offset = 0;
 
+# Parse the header
+print_header('Compatibility:', header_compat($header));
+print_header('Extracted at :', header_datestr($header));
+print_header('Type         :', header_type($header));
+print_header('Name         :', header_name($header));
+
+
+
+# And now, the actual file content
 while($offset < $length) {
 	$char = ord(substr($program, $offset++, 1));
 	if (exists($all{$char})) {
