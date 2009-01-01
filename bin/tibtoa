@@ -705,7 +705,7 @@ if (header_type($header) eq 'program') {
 			$out = $special->{$char}->{$char2};
 		} else {
 			printf STDERR (
-				"Unknown byte 0x%02x at offset %d\n",
+				"Unknown byte 0x%02x at offset 0x%02x\n",
 				$char,
 				$offset - 1,
 			);
@@ -754,4 +754,6 @@ if (header_type($header) eq 'program') {
 			print ' | ';
 		}
 	}
+} else {
+	print STDERR "file type not supported\n";
 }
