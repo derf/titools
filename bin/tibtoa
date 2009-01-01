@@ -31,6 +31,7 @@ my $hex;
 my ($indent, $rindent) = (0,0);
 my %opts;
 my ($program, $length, $offset);
+my %header;
 my %all = (
 	0x01 => '►DMS',
 	0x02 => '►Dec',
@@ -702,22 +703,31 @@ $length = length($program);
 $offset = 0;
 
 # Parse the header
+%header = (
+	compat  => header_compat($header),
+	datestr => header_datestr($header),
+	type    => header_type($header),
+	name    => header_name($header),
+	size    => header_size($header),
+);
+
+
 if ($opts{h}) {
-	print_header('Compatibility:', header_compat($header));
-	print_header('Extracted at :', header_datestr($header));
-	print_header('Type         :', header_type($header));
-	print_header('Name         :', header_name($header));
-	print_header('Length w/o header:', header_size($header)->{full});
-	if (header_type($header) eq 'matrix') {
-		print_header('Matrix dimensions:', join('x', @{header_size($header)}{'rows','cols'}));
-	} elsif (header_type($header) eq 'list') {
-		print_header('List length  :', header_size($header)->{items});
+	print_header('Compatibility:', $header{compat});
+	print_header('Extracted at :', $header{datestr});
+	print_header('Type         :', $header{type});
+	print_header('Name         :', $header{name});
+	print_header('Length w/o header:', $header{size}->{full});
+	if ($header{type} eq 'matrix') {
+		print_header('Matrix dimensions:', join('x', @{$header{size}}{'rows','cols'}));
+	} elsif ($header{type} eq 'list') {
+		print_header('List length  :', $header{size}->{items});
 	}
 }
 
 
 # And now, the actual file content
-if (header_type($header) eq 'program') {
+if ($header{type} eq 'program') {
 	while($offset < $length) {
 		$char = ord(substr($program, $offset++, 1));
 		if (exists($all{$char})) {
@@ -752,7 +762,7 @@ if (header_type($header) eq 'program') {
 		}
 	}
 	print $cache;
-} elsif (header_type($header) eq 'matrix' or header_type($header) eq 'list') {
+} elsif ($header{type} eq 'matrix' or $header{type} eq 'list') {
 	my ($step, $exp, $digit);
 	my $i = 0;
 	while ($offset+9 <= $length) {
@@ -769,10 +779,10 @@ if (header_type($header) eq 'program') {
 		}
 		$offset++;
 		printf('%-8s', $digit * (10 ** $exp));
-		if (header_type($header) eq 'matrix' and $i == header_size($header)->{cols}) {
+		if ($header{type} eq 'matrix' and $i == $header{size}->{cols}) {
 			print "\n";
 			$i = 0;
-		} elsif (header_type($header) eq 'matrix') {
+		} elsif ($header{type} eq 'matrix') {
 			print ' | ';
 		}
 	}
