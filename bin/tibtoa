@@ -782,14 +782,16 @@ if ($header{type} eq 'program') {
 	while ($offset+9 <= $length) {
 		$i++;
 		$digit = '';
-		$exp = ord(substr($program, ++$offset, 1)) - 128;
+		if (ord(substr($program, $offset++, 1)) >= 0x80) {
+			$digit .= '-';
+		}
+		$exp = ord(substr($program, $offset++, 1)) - 128;
 		for(1 .. 7) {
-			$char = ord(substr($program, ++$offset, 1));
+			$char = ord(substr($program, $offset++, 1));
 			$digit .= $char >> 4;
 			$digit .= $char & 0x0f;
 		}
-		$offset++;
-		substr($digit, 1, 0, '.');
+		substr($digit, 1 + ($digit <= 0), 0, '.');
 		printf('%-8s', $digit * (10 ** $exp));
 		if ($header{type} eq 'matrix' and $i == $header{size}->{cols} or $header{type} eq 'var') {
 			print "\n";
