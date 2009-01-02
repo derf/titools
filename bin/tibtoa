@@ -837,18 +837,8 @@ B<tibtoa> reads in the file specified on the commandline and prints the result
 to STDOUT. Errors, such as unknown  bytes in the source, go to STDERR.
 
 Currently, the following file types are supported:
-
-=over
-
-=item * B<*.8Xp> - program files
-
-=item * B<*.8Xm> - matrix files
-
-=item * B<*.8Xl> - list files
-
-=item * B<*.8Xn> - variable files
-
-=back
+B<.8Xv> (variable), B<.8Xl> (list), B<.8Xm> (matrix), B<.8Xe> (equation),
+B<.8Xs> (string), B<.8Xp> (program).
 
 =head1 OPTIONS
 
