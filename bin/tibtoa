@@ -640,6 +640,7 @@ sub header_type($) {
 		when(0x00) { return('var') }
 		when(0x01) { return('list') }
 		when(0x02) { return('matrix') }
+		when(0x04) { return('string') }
 		when(0x05) { return('program') }
 		default { return(sprintf('0x%02x', $_)) }
 	}
@@ -651,6 +652,7 @@ sub header_name($) {
 	given (header_type($header)) {
 		when('var') { $name = substr($header, 0x3c, 1) }
 		when('matrix') { $name = substr($header, 0x3d, 1) }
+		when('string') { $name = (ord(substr($header, 0x3d, 1)) + 1) % 10 }
 		when('program') {
 			$name = substr($header, 0x3c, 10);
 			$name =~ s/\x00/ /g;
@@ -799,6 +801,11 @@ if ($header{type} eq 'program') {
 			print ' | ';
 		}
 	}
+} elsif ($header{type} eq 'string') {
+	while($offset < $length) {
+		print substr($program, $offset++, 1);
+	}
+	print "\n";
 } else {
 	print STDERR "file type not supported\n";
 }
