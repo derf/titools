@@ -640,6 +640,7 @@ sub header_type($) {
 		when(0x00) { return('var') }
 		when(0x01) { return('list') }
 		when(0x02) { return('matrix') }
+		when(0x03) { return('equation') }
 		when(0x04) { return('string') }
 		when(0x05) { return('program') }
 		default { return(sprintf('0x%02x', $_)) }
@@ -677,7 +678,7 @@ sub header_size($) {
 			$size->{cols} = ord(substr($header, 0x48, 1));
 			$size->{rows} = ord(substr($header, 0x49, 1));
 		}
-		when($_ eq 'program' or $_ eq 'string') {
+		when(/program|string|equation/) {
 			$size->{source} = ord(substr($header, 0x48, 1)) + 255 * ord(substr($header, 0x49, 1));
 		}
 	}
@@ -734,12 +735,14 @@ if ($opts{h}) {
 		print_header('String length:', $header{size}->{source});
 	} elsif ($header{type} eq 'program') {
 		print_header('Program size :', $header{size}->{source});
+	} elsif ($header{type} eq 'equation') {
+		print_header('Payload length:', $header{size}->{source});
 	}
 }
 
 
 # And now, the actual file content
-if ($header{type} eq 'program') {
+if ($header{type} eq 'program' or $header{type} eq 'equation') {
 	while($offset < $length) {
 		$char = ord(substr($program, $offset++, 1));
 		if (exists($all{$char})) {
