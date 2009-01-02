@@ -743,9 +743,9 @@ if ($header{type} eq 'program') {
 			$out = $special->{$char}->{$char2};
 		} else {
 			printf STDERR (
-				"Unknown byte 0x%02x at offset 0x%02x\n",
+				"Unknown byte 0x%02x at %04x\n",
 				$char,
-				$offset - 1,
+				$headerlength + $offset - 1,
 			);
 			$out = chr($char);
 		}
