@@ -20,7 +20,7 @@ use 5.010;
 use Getopt::Std;
 
 binmode(STDOUT, ':utf8');
-my $headerlength = 74;
+my $headerlength = 0x4a;
 my $footerlength = 2;
 my ($header, $footer);
 my ($char, $char2);
@@ -650,9 +650,9 @@ sub header_name($) {
 	my $name;
 	given (header_type($header)) {
 		when('var') { $name = substr($header, 0x3c, 1) }
-		when('matrix') { $name = substr($header, 61, 1) }
+		when('matrix') { $name = substr($header, 0x3d, 1) }
 		when('program') {
-			$name = substr($header, 60, 10);
+			$name = substr($header, 0x3c, 10);
 			$name =~ s/\x00/ /g;
 		}
 		when('list') {
@@ -666,28 +666,28 @@ sub header_name($) {
 sub header_size($) {
 	my $header = shift;
 	my $size;
-	$size->{full} = ord(substr($header, 70, 1)) + 255 * ord(substr($header, 71, 1));
+	$size->{full} = ord(substr($header, 0x46, 1)) + 255 * ord(substr($header, 0x47, 1));
 	given(header_type($header)) {
 		when('list') {
 			$size->{items} = ord(substr($header, 0x48, 1));
 		}
 		when('matrix') {
-			$size->{cols} = ord(substr($header, 72, 1));
-			$size->{rows} = ord(substr($header, 73, 1));
+			$size->{cols} = ord(substr($header, 0x48, 1));
+			$size->{rows} = ord(substr($header, 0x49, 1));
 		}
 		when('program') {
-			$size->{source} = ord(substr($header, 72, 1)) + 255 * ord(substr($header, 73, 1));
+			$size->{source} = ord(substr($header, 0x48, 1)) + 255 * ord(substr($header, 0x49, 1));
 		}
 	}
 	return($size);
 }
 
 sub header_compat($) {
-	return(substr(shift, 2, 4));
+	return(substr(shift, 0x02, 4));
 }
 
 sub header_datestr($) {
-	return(substr(shift, 29, 19));
+	return(substr(shift, 0x1d, 19));
 }
 
 #sub char_to_digits($) {
@@ -784,7 +784,7 @@ if ($header{type} eq 'program') {
 		if (ord(substr($program, $offset++, 1)) >= 0x80) {
 			$digit .= '-';
 		}
-		$exp = ord(substr($program, $offset++, 1)) - 128;
+		$exp = ord(substr($program, $offset++, 1)) - 0x80;
 		for(1 .. 7) {
 			$char = ord(substr($program, $offset++, 1));
 			$digit .= $char >> 4;
