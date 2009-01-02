@@ -638,6 +638,7 @@ sub print_header {
 sub header_type($) {
 	my $header = shift;
 	given (ord(substr($header, 0x3b, 1))) {
+		when(0x00) { return('var') }
 		when(0x01) { return('list') }
 		when(0x02) { return('matrix') }
 		when(0x05) { return('program') }
@@ -649,6 +650,7 @@ sub header_name($) {
 	my $header = shift;
 	my $name;
 	given (header_type($header)) {
+		when('var') { $name = substr($header, 0x3c, 1) }
 		when('matrix') { $name = substr($header, 61, 1) }
 		when('program') {
 			$name = substr($header, 60, 10);
@@ -688,6 +690,11 @@ sub header_compat($) {
 sub header_datestr($) {
 	return(substr(shift, 29, 19));
 }
+
+#sub char_to_digits($) {
+#	my $char = shift;
+#	return($char >> 4, $char & 0x0f);
+#}
 
 getopts('ih', \%opts);
 
@@ -762,9 +769,16 @@ if ($header{type} eq 'program') {
 		}
 	}
 	print "$cache\n";
-} elsif ($header{type} eq 'matrix' or $header{type} eq 'list') {
-	my ($step, $exp, $digit);
+} elsif ($header{type} eq 'matrix' or $header{type} eq 'list' or $header{type} eq 'var') {
+	my ($exp, $digit);
 	my $i = 0;
+
+	if ($header{type} eq 'var') {
+		# Variables have a shorter header
+		substr($program, 0, 0, substr($header, -2, 2));
+		$length = length($program);
+	}
+
 	while ($offset+9 <= $length) {
 		$i++;
 		$digit = '';
@@ -772,14 +786,12 @@ if ($header{type} eq 'program') {
 		for(1 .. 7) {
 			$char = ord(substr($program, ++$offset, 1));
 			$digit .= $char >> 4;
-			if ($_ == 1) {
-				$digit .= '.';
-			}
 			$digit .= $char & 0x0f;
 		}
 		$offset++;
+		substr($digit, 1, 0, '.');
 		printf('%-8s', $digit * (10 ** $exp));
-		if ($header{type} eq 'matrix' and $i == $header{size}->{cols}) {
+		if ($header{type} eq 'matrix' and $i == $header{size}->{cols} or $header{type} eq 'var') {
 			print "\n";
 			$i = 0;
 		} elsif ($header{type} eq 'matrix') {
@@ -818,6 +830,8 @@ Currently, the following file types are supported:
 =item * B<*.8Xm> - matrix files
 
 =item * B<*.8Xl> - list files
+
+=item * B<*.8Xn> - variable files
 
 =back
 
