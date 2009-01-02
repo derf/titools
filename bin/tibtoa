@@ -677,7 +677,7 @@ sub header_size($) {
 			$size->{cols} = ord(substr($header, 0x48, 1));
 			$size->{rows} = ord(substr($header, 0x49, 1));
 		}
-		when('program') {
+		when($_ eq 'program' or $_ eq 'string') {
 			$size->{source} = ord(substr($header, 0x48, 1)) + 255 * ord(substr($header, 0x49, 1));
 		}
 	}
@@ -730,6 +730,10 @@ if ($opts{h}) {
 		print_header('Matrix dimensions:', join('x', @{$header{size}}{'rows','cols'}));
 	} elsif ($header{type} eq 'list') {
 		print_header('List length  :', $header{size}->{items});
+	} elsif ($header{type} eq 'string') {
+		print_header('String length:', $header{size}->{source});
+	} elsif ($header{type} eq 'program') {
+		print_header('Program size :', $header{size}->{source});
 	}
 }
 
