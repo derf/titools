@@ -14,7 +14,6 @@
 ## OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 use strict;
-use feature 'switch';
 use warnings;
 use utf8;
 use 5.010;
