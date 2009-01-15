@@ -354,8 +354,11 @@ my $special = {
 		0x08 => 'GDB9',
 		0x09 => 'GDB0',
 	},
+	# FIXME statistics variable bytes
 	0x62 => {},
+	# FIXME window / finance bytes
 	0x63 => {},
+	# FIXME graph format bytes
 	0x7e => {},
 	0xaa => {
 		0x00 => 'Str1',
