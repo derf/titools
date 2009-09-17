@@ -26,7 +26,6 @@ my ($header, $footer);
 my ($char, $char2);
 my $out;
 my $cache;
-my $hex;
 my ($indent, $rindent) = (0,0);
 my %opts;
 my ($program, $length, $offset);
@@ -840,11 +839,11 @@ sub header_datestr($) {
 
 getopts('ih', \%opts);
 
-open(PRGM, '<', shift) or die;
-binmode(PRGM);
-read(PRGM, $header, $headerlength);
-$program = <PRGM>;
-close(PRGM);
+open(my $input, '<', shift) or die;
+binmode($input);
+read($input, $header, $headerlength);
+$program = <$input>;
+close($input);
 
 # The last two bytes don't contain program code
 $footer = substr($program, -$footerlength, $footerlength, '');
@@ -868,7 +867,7 @@ if ($opts{h}) {
 	print_header('Name         :', $header{name});
 	print_header('Length w/o header:', $header{size}->{full});
 	if ($header{type} eq 'matrix') {
-		print_header('Matrix dimensions:', join('x', @{$header{size}}{'rows','cols'}));
+		print_header('Matrix dimensions:', join('x', @{$header{size}}{'rows', 'cols'}));
 	} elsif ($header{type} eq 'list') {
 		print_header('List length  :', $header{size}->{items});
 	} elsif ($header{type} eq 'string') {
