@@ -1023,6 +1023,6 @@ Indent the content of for, while, if, etc. statements
 
 =item B<-h>
 
-Print the content of the file header before the file content, prefixed by '//'
+Print the content of the file header before the file content, prefixed by '#'
 
 =back
