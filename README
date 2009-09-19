@@ -1,0 +1,7 @@
+Tools related to the Texas Instruments TI8x calculators
+
+Right now this only contains 'tibtoa' (TI Basic to ASCII), which will read
+the binary TI8x files and dump their contents. Note that it's not really
+ASCII - Most of the calculator's characters are displayed in Unicode.
+
+tibtoa has been tested with files dumped by tilp.
