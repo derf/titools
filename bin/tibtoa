@@ -818,7 +818,7 @@ sub header_size($) {
 			$size->{cols} = ord(substr($header, 0x48, 1));
 			$size->{rows} = ord(substr($header, 0x49, 1));
 		}
-		when(/program|string|equation/) {
+		when(['program', 'string', 'equation']) {
 			$size->{source} = ord(substr($header, 0x48, 1)) + 255 * ord(substr($header, 0x49, 1));
 		}
 	}
@@ -832,11 +832,6 @@ sub header_compat($) {
 sub header_datestr($) {
 	return(substr(shift, 0x1d, 19));
 }
-
-#sub char_to_digits($) {
-#	my $char = shift;
-#	return($char >> 4, $char & 0x0f);
-#}
 
 getopts('ih', \%opts);
 
@@ -883,7 +878,7 @@ if ($opts{h}) {
 
 
 # And now, the actual file content
-if ($header{type} eq 'program' or $header{type} eq 'equation') {
+if ($header{type} ~~ ['program', 'equation']) {
 	while($offset < $length) {
 		$char = ord(substr($program, $offset++, 1));
 		if (exists($all{$char})) {
@@ -918,7 +913,7 @@ if ($header{type} eq 'program' or $header{type} eq 'equation') {
 		}
 	}
 	print "$cache\n";
-} elsif ($header{type} =~ /^(matrix|list|var|zoom|window)$/) {
+} elsif ($header{type} ~~ ['matrix', 'list', 'var', 'zoom', 'window']) {
 	my ($exp, $digit);
 	my $i = 0;
 	my @values;
@@ -971,7 +966,8 @@ if ($header{type} eq 'program' or $header{type} eq 'equation') {
 	}
 	print "\n";
 } else {
-	print STDERR "file type not supported\n";
+	print STDERR "file type $header{type} not supported\n";
+	exit 1;
 }
 
 __END__
