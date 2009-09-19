@@ -26,6 +26,7 @@ my ($header, $footer);
 my ($char, $char2);
 my $out;
 my $cache;
+my $file;
 my ($indent, $rindent) = (0,0);
 my %opts;
 my ($program, $length, $offset);
@@ -839,7 +840,8 @@ sub header_datestr($) {
 
 getopts('ih', \%opts);
 
-open(my $input, '<', shift) or die;
+$file = shift;
+open(my $input, '<', $file) or die("Cannot open $file: $!");
 binmode($input);
 read($input, $header, $headerlength);
 $program = <$input>;
