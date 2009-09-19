@@ -18,10 +18,12 @@ use warnings;
 use utf8;
 use 5.010;
 use Getopt::Std;
+use constant {
+	HEADERLENGTH => 0x4a,
+	FOOTERLENGTH => 0x02,
+};
 
 binmode(STDOUT, ':utf8');
-my $headerlength = 0x4a;
-my $footerlength = 2;
 my ($header, $footer);
 my ($char, $char2);
 my $out;
@@ -765,14 +767,19 @@ my $special = {
 		0x17 => 'Manual-Fit',
 	},
 };
-local $/;
+local $/ = undef;
 
 sub print_header {
-	my $text = join(' ', @_);
-	print "// $text\n";
+	my ($header, $content) = @_;
+	printf(
+		"# %-20s: %s\n",
+		$header,
+		$content,
+	);
+	return;
 }
 
-sub header_type($) {
+sub header_type {
 	my $header = shift;
 	given (ord(substr($header, 0x3b, 1))) {
 		when(0x00) { return('var') }
@@ -783,11 +790,12 @@ sub header_type($) {
 		when(0x05) { return('program') }
 		when(0x10) { return('zoom') }
 		when(0x0f) { return('window') }
-		default { return(sprintf('0x%02x', $_)) }
+		default    { return(sprintf('0x%02x', $_)) }
 	}
+	return;
 }
 
-sub header_name($) {
+sub header_name {
 	my $header = shift;
 	my $name;
 	given (header_type($header)) {
@@ -806,7 +814,7 @@ sub header_name($) {
 	return($name);
 }
 
-sub header_size($) {
+sub header_size {
 	my $header = shift;
 	my $size;
 	$size->{full} = ord(substr($header, 0x46, 1)) + 255 * ord(substr($header, 0x47, 1));
@@ -825,11 +833,11 @@ sub header_size($) {
 	return($size);
 }
 
-sub header_compat($) {
+sub header_compat {
 	return(substr(shift, 0x02, 4));
 }
 
-sub header_datestr($) {
+sub header_datestr {
 	return(substr(shift, 0x1d, 19));
 }
 
@@ -838,12 +846,12 @@ getopts('ih', \%opts);
 $file = shift;
 open(my $input, '<', $file) or die("Cannot open $file: $!");
 binmode($input);
-read($input, $header, $headerlength);
+read($input, $header, HEADERLENGTH);
 $program = <$input>;
 close($input);
 
 # The last two bytes don't contain program code
-$footer = substr($program, -$footerlength, $footerlength, '');
+$footer = substr($program, -(FOOTERLENGTH), FOOTERLENGTH, '');
 $length = length($program);
 $offset = 0;
 
@@ -858,21 +866,27 @@ $offset = 0;
 
 
 if ($opts{h}) {
-	print_header('Compatibility:', $header{compat});
-	print_header('Extracted at :', $header{datestr});
-	print_header('Type         :', $header{type});
-	print_header('Name         :', $header{name});
-	print_header('Length w/o header:', $header{size}->{full});
-	if ($header{type} eq 'matrix') {
-		print_header('Matrix dimensions:', join('x', @{$header{size}}{'rows', 'cols'}));
-	} elsif ($header{type} eq 'list') {
-		print_header('List length  :', $header{size}->{items});
-	} elsif ($header{type} eq 'string') {
-		print_header('String length:', $header{size}->{source});
-	} elsif ($header{type} eq 'program') {
-		print_header('Program size :', $header{size}->{source});
-	} elsif ($header{type} eq 'equation') {
-		print_header('Payload length:', $header{size}->{source});
+	print_header('Compatibility', $header{compat} );
+	print_header('Extracted at' , $header{datestr});
+	print_header('Type'         , $header{type}   );
+	print_header('Name'         , $header{name}   );
+	print_header('Length w/o header', $header{size}->{full});
+	given ($header{type}) {
+		when ('matrix') {
+			print_header('Matrix dimensions', join('x', @{$header{size}}{'rows', 'cols'}));
+		}
+		when ('list') {
+			print_header('List length', $header{size}->{items});
+		}
+		when ('string') {
+			print_header('String length', $header{size}->{source});
+		}
+		when ('program') {
+			print_header('Program size', $header{size}->{source});
+		}
+		when ('equation') {
+			print_header('Payload length', $header{size}->{source});
+		}
 	}
 }
 
@@ -890,12 +904,13 @@ if ($header{type} ~~ ['program', 'equation']) {
 			printf STDERR (
 				"Unknown byte 0x%02x at %04x\n",
 				$char,
-				$headerlength + $offset - 1,
+				HEADERLENGTH + $offset - 1,
 			);
 			$out = chr($char);
 		}
+
 		if ($opts{i}) {
-			if ($out =~ /Then|While|Repeat|For/) {
+			if ($out =~ /Then | While | Repeat | For/x) {
 				$indent++;
 			} elsif ($out =~ /Else/) {
 				$rindent--;
@@ -904,6 +919,7 @@ if ($header{type} ~~ ['program', 'equation']) {
 				$rindent--;
 			}
 		}
+
 		$cache .= $out;
 		if ($out eq "\n") {
 			print "\t" x $rindent;
@@ -913,13 +929,14 @@ if ($header{type} ~~ ['program', 'equation']) {
 		}
 	}
 	print "$cache\n";
-} elsif ($header{type} ~~ ['matrix', 'list', 'var', 'zoom', 'window']) {
+}
+elsif ($header{type} ~~ ['matrix', 'list', 'var', 'zoom', 'window']) {
 	my ($exp, $digit);
 	my $i = 0;
 	my @values;
 
+	# Variables have a shorter header
 	if ($header{type} eq 'var') {
-		# Variables have a shorter header
 		substr($program, 0, 0, substr($header, -2, 2));
 		$length = length($program);
 	}
@@ -938,10 +955,10 @@ if ($header{type} ~~ ['program', 'equation']) {
 		}
 		substr($digit, 1 + ($digit <= 0), 0, '.');
 		$digit *= 10 ** $exp;
-		unless ($header{type} eq 'zoom') {
-			printf('%-8s', $digit);
-		} else {
+		if ($header{type} eq 'zoom') {
 			push(@values, $digit);
+		} else {
+			printf('%-8s', $digit);
 		}
 		if ($header{type} eq 'matrix' and $i == $header{size}->{cols} or $header{type} eq 'var') {
 			print "\n";
@@ -952,6 +969,7 @@ if ($header{type} ~~ ['program', 'equation']) {
 			print ' ';
 		}
 	}
+
 	if ($header{type} eq 'zoom') {
 		print "Xmin = $values[0]\n";
 		print "Xmax = $values[1]\n";
@@ -960,12 +978,14 @@ if ($header{type} ~~ ['program', 'equation']) {
 		print "Ymax = $values[4]\n";
 		print "Yscl = $values[5]\n";
 	}
-} elsif ($header{type} eq 'string') {
+}
+elsif ($header{type} eq 'string') {
 	while($offset < $length) {
 		print substr($program, $offset++, 1);
 	}
 	print "\n";
-} else {
+}
+else {
 	print STDERR "file type $header{type} not supported\n";
 	exit 1;
 }
