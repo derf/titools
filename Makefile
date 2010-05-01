@@ -1,21 +1,21 @@
-prefix = /usr/local
+include config.mk
 
-default: build/tibtoa.1
+all: build/tibtoa.1
 
-build/%.1: bin/%
+build/tibtoa.1: bin/tibtoa
 	mkdir -p build
-	pod2man $< > $@
+	pod2man bin/tibtoa > $@
 
 install: build/tibtoa.1
-	mkdir -p $(prefix)/bin $(prefix)/share/man/man1
-	cp bin/tibtoa $(prefix)/bin/tibtoa
-	cp build/tibtoa.1 $(prefix)/share/man/man1/tibtoa.1
-	chmod 755 $(prefix)/bin/tibtoa
-	chmod 644 $(prefix)/share/man/man1/tibtoa.1
+	mkdir -p ${bin_dir} ${man_dir}/man1
+	cp bin/tibtoa ${bin_dir}/tibtoa
+	cp build/tibtoa.1 ${man_dir}/man1/tibtoa.1
+	chmod 755 ${bin_dir}/tibtoa
+	chmod 644 ${man_dir}/man1/tibtoa.1
 
 uninstall:
-	rm -f $(prefix)/bin/tibtoa
-	rm -f $(prefix)/share/man/man1/tibtoa.1
+	rm -f ${bin_dir}/tibtoa
+	rm -f ${man_dir}/man1/tibtoa.1
 
 clean:
 	rm -rf build
